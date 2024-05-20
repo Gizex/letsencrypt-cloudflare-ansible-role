@@ -1,0 +1,51 @@
+---
+- name: Install certbot and Cloudflare plugin
+  apt:
+    name: 
+      - certbot
+      - python3-certbot-dns-cloudflare
+    state: present
+  become: true
+
+- name: Ensure .secrets directory exists
+  file:
+    path: "/root/.secrets"
+    state: directory
+  become: true
+
+- name: Create Cloudflare credentials file
+  copy:
+    dest: "{{ certbot_cloudflare_credentials_path }}"
+    content: |
+      dns_cloudflare_email = "{{ certbot_cloudflare_email }}"
+      dns_cloudflare_api_key = "{{ certbot_cloudflare_api_key }}"
+    mode: '0600'
+  become: true
+
+- name: Generate wildcard certificates for each domain
+  command:
+    cmd: "certbot certonly -n --dns-cloudflare --dns-cloudflare-credentials {{ certbot_cloudflare_credentials_path }} -d {{ item.domain }},{{ item.subdomain }} --preferred-challenges dns-01 --agree-tos --email {{ certbot_cloudflare_notify_email if certbot_cloudflare_notify_email is defined else certbot_cloudflare_email }} --dns-cloudflare-propagation-seconds 30"
+  with_items: "{{ certbot_cloudflare_domains }}"
+  become: true
+
+- name: Copy nginx SSL options
+  template:
+    src: "options-ssl-nginx.conf.j2"
+    dest: "/etc/letsencrypt/options-ssl-nginx.conf"
+  become: true
+
+- name: Make additional path for certs
+  file:
+    path: "{{ certbot_cloudflare_additional_path }}"
+    state: directory
+  when: certbot_cloudflare_additional_path is defined
+
+- name: Create symbolic links for SSL certificates
+  ansible.builtin.file:
+    src: "/etc/letsencrypt/live/{{ item.domain }}"
+    dest: "{{ certbot_cloudflare_additional_path }}/{{ item.domain }}"
+    state: link
+    force: yes
+  loop: "{{ certbot_cloudflare_domains }}"
+  when: item.domain is defined and certbot_cloudflare_additional_path is defined
+
