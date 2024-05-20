@@ -1,0 +1,37 @@
+---
+dependencies: []
+
+galaxy_info:
+  role_name: certbot_cloudflare
+  author: Gizex
+  description: Automates the process of obtaining and renewing SSL certificates from Let's Encrypt using the Cloudflare DNS challenge.
+  company: "gzx org"
+  license: "license (BSD, MIT)"
+  min_ansible_version: "2.10"
+  platforms:
+    - name: Fedora
+      versions:
+        - all
+    - name: Debian
+      versions:
+        - buster
+        - bullseye
+        - bookworm
+    - name: Ubuntu
+      versions:
+        - bionic
+        - focal
+        - jammy
+    - name: Alpine
+      version:
+        - all
+    - name: ArchLinux
+      versions:
+        - all
+  galaxy_tags:
+    - web
+    - system
+    - letsencrypt
+    - ssl
+    - cloudflare
+    - certbot
